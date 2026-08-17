@@ -1,55 +1,110 @@
 # NetInstall
 
-Universal network-based operating system deployment and recovery toolkit.
+Universal network-based operating-system deployment and recovery toolkit.
 
-NetInstall is designed around a small bootstrap environment that can start on a target machine, establish network connectivity, retrieve the current deployment manifest from GitHub-hosted infrastructure, and launch the appropriate OS installation workflow.
+NetInstall boots a small UEFI/iPXE bootstrap, brings up networking, retrieves a GitHub-hosted catalog, and hands off to an OS-specific network installer. The repository deliberately does **not** bundle complete operating-system images.
 
-## Project goals
+## Current MVP
 
-- Network-first OS installation and recovery
-- UEFI/PXE/iPXE-oriented boot paths
-- Small bootstrap media instead of carrying complete OS images
-- GitHub-hosted manifests and release artifacts
-- Modular OS installation backends
-- Linux and Windows support as first-class targets
-- Clear separation between bootstrap, networking, orchestration, and installers
-- Reproducible builds and automated validation
+The current MVP supports an **x86_64 UEFI + network** path for:
 
-## Current status
+- Ubuntu 24.04 LTS network installer
+- Debian 13 (Trixie) network installer
+- iPXE UEFI bootstrap generation
+- Catalog-driven boot menu generation
+- HTTPS-only artifact URLs
+- SHA-256 pinning/verification infrastructure
+- Non-destructive deployment planning
+- Wi-Fi discovery on an already-running Linux environment
+- GitHub Actions validation and bootstrap artifact builds
 
-Early development. The repository currently contains the project foundation and architecture contract. Boot media and installer implementations will be added incrementally.
+Fedora and Windows are represented as planned adapters and are intentionally not exposed as bootable catalog entries until their release-specific artifacts and workflows are verified.
 
-## High-level architecture
+## Architecture
 
 ```text
-Target machine
-      |
-      v
-Bootstrap (USB / PXE / HTTP Boot / iPXE)
-      |
-      v
-Network initialization
-      |
-      v
-NetInstall engine
-      |
-      +---- GitHub manifest / release metadata
-      |
-      +---- OS backend selection
-      |
-      v
-OS-specific installation workflow
-      |
-      v
-Target disk
+                         GitHub
+                           |
+                 catalog + control scripts
+                           |
+                           v
+Target machine ---> UEFI / iPXE bootstrap
+                           |
+                           v
+                    Network initialization
+                           |
+                           v
+                    NetInstall menu
+                     /           \
+                    /             \
+               Ubuntu           Debian
+                 |                 |
+             kernel/initrd     kernel/initrd
+                 |                 |
+                 +--------+--------+
+                          |
+                          v
+                    OS installer
+                          |
+                          v
+                       Target SSD
 ```
 
-## Design principle
+## Bootstrap options
 
-NetInstall must not assume that the target currently has a working operating system. The bootstrap layer is therefore intentionally independent from the installed OS and is responsible only for reaching a minimal execution environment and bringing up networking.
+### Tiny USB
 
-## Development
+Build the UEFI bootstrap through GitHub Actions or locally:
 
-The core application is Python-based. Low-level boot artifacts may use technologies appropriate to the target firmware and boot path, including UEFI executables, iPXE scripts, and minimal Linux-based recovery environments.
+```bash
+bash scripts/build-ipxe.sh
+bash scripts/make-usb-tree.sh
+```
 
-See `docs/architecture.md` for the initial architecture contract.
+Copy the resulting `dist/usb-tree` contents to a FAT32 UEFI USB device. The USB contains the small bootstrap, not the OS payload.
+
+### PXE / HTTP Boot
+
+The same iPXE control scripts can be used from a PXE or firmware HTTP-Boot environment when the target firmware and network adapter support that path.
+
+## CLI
+
+```bash
+python -m pip install -e .
+netinstall diagnose
+netinstall wifi scan
+netinstall network
+netinstall github
+netinstall os
+netinstall deploy ubuntu-24.04
+```
+
+`deploy` is currently a **planning operation**. It does not partition, format, mount, or write a target disk.
+
+## Artifact security
+
+Production downloads require a SHA-256 pin. Generate a reviewable pinned catalog with:
+
+```bash
+python scripts/pin-artifact-hashes.py \
+  catalog/operating-systems.json \
+  /tmp/operating-systems.pinned.json
+```
+
+The pinned file must be reviewed and committed before using those artifacts in a production deployment workflow.
+
+## Important limitations
+
+- A completely blank laptop cannot magically use Wi-Fi unless its pre-OS firmware/bootstrap path supports the required wireless hardware. The Vostro 15 3568 should therefore be tested first over Ethernet/PXE or with the tiny USB bootstrap.
+- Secure Boot requires a trusted/signed EFI artifact. The current iPXE build is not a NetInstall-signed Secure Boot binary.
+- Windows deployment requires user-supplied/licensed installation media and a verified WinPE workflow; Windows media is not redistributed by this project.
+- Fedora support remains planned until release-specific network-install artifacts are pinned and tested.
+- The project must be tested in QEMU/disposable media before any destructive disk-writing backend is enabled.
+
+## Development and safety
+
+The Python deployment engine is intentionally non-destructive. Installer adapters generate handoff plans/configuration; privileged disk operations are a separate future layer that must require explicit target-device confirmation.
+
+GitHub Actions runs catalog validation, menu-generation consistency checks, Python tests, and CLI smoke tests. The UEFI bootstrap build is also reproducible through `.github/workflows/build-bootstrap.yml`.
+
+See `docs/architecture.md`, `docs/network-boot.md`, `docs/installer-configs.md`, and `docs/testing.md` for implementation details.
