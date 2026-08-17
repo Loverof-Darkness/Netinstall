@@ -1,0 +1,18 @@
+#!ipxe
+
+# Minimal CI bootstrap: verify iPXE executes and can reach GitHub over HTTPS.
+set base https://raw.githubusercontent.com/Loverof-Darkness/Netinstall/main
+
+echo NETINSTALL_CI_BOOT_START
+ifopen net0 || goto network_error
+imgfetch ${base}/catalog/operating-systems.json || goto fetch_error
+echo NETINSTALL_CI_NETWORK_OK
+exit
+
+:network_error
+echo NETINSTALL_CI_NETWORK_ERROR
+exit
+
+:fetch_error
+echo NETINSTALL_CI_FETCH_ERROR
+exit
