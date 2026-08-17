@@ -1,0 +1,65 @@
+name: QEMU bootstrap smoke test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'boot/ipxe/**'
+      - 'scripts/build-ipxe.sh'
+      - '.github/workflows/qemu-bootstrap.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qemu-boot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout NetInstall
+        uses: actions/checkout@v4
+
+      - name: Install QEMU and UEFI firmware
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcc make git binutils perl xz-utils liblzma-dev qemu-system-x86 ovmf
+
+      - name: Build bootstrap
+        run: |
+          chmod +x scripts/build-ipxe.sh
+          IPXE_REF=master bash scripts/build-ipxe.sh
+
+      - name: Boot EFI artifact in QEMU
+        shell: bash
+        run: |
+          set +e
+          timeout 35s qemu-system-x86_64 \
+            -machine q35 \
+            -m 512M \
+            -bios /usr/share/OVMF/OVMF_CODE_4M.fd \
+            -drive file=fat:rw:dist,format=raw \
+            -netdev user,id=net0 \
+            -device e1000,netdev=net0 \
+            -serial stdio \
+            -display none \
+            > qemu.log 2>&1
+          status=$?
+          set -e
+
+          grep -Eq 'NetInstall network bootstrap|Network interface ready|Fetching NetInstall control script|No usable network interface|Unable to retrieve the NetInstall control script' qemu.log
+
+          if [ "$status" -ne 0 ] && [ "$status" -ne 124 ]; then
+            echo "QEMU exited unexpectedly with status $status"
+            cat qemu.log
+            exit "$status"
+          fi
+
+          cat qemu.log
+
+      - name: Upload QEMU log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qemu-bootstrap-log
+          path: qemu.log
