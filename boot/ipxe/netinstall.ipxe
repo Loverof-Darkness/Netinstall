@@ -1,0 +1,35 @@
+#!ipxe
+
+# NetInstall iPXE bootstrap script.
+# The script intentionally keeps the bootstrap tiny; the larger control plane
+# and installer payloads are fetched over HTTPS.
+
+set base https://raw.githubusercontent.com/Loverof-Darkness/Netinstall/main
+set catalog ${base}/catalog/operating-systems.json
+
+isset ${net0/mac} || goto no-network
+
+echo NetInstall network bootstrap
+ifopen net0 || goto no-network
+
+echo Network interface ready.
+
+echo Fetching NetInstall catalog...
+chain --replace ${catalog} || goto catalog-error
+
+goto shell
+
+:shell
+echo NetInstall bootstrap loaded.
+echo Use the NetInstall control environment for OS selection.
+shell
+
+:no-network
+echo No usable network interface was detected.
+echo Connect Ethernet or use a bootstrap environment with Wi-Fi support.
+shell
+
+:catalog-error
+echo Unable to retrieve the NetInstall catalog.
+echo Check Internet connectivity and HTTPS access.
+shell
