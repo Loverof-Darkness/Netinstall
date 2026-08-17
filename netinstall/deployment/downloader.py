@@ -11,10 +11,23 @@ class DownloadError(RuntimeError):
     """Raised when an artifact cannot be downloaded or verified."""
 
 
-def download(url: str, destination: str | Path, *, sha256: str | None = None, timeout: int = 60) -> Path:
-    """Download an HTTPS artifact and optionally verify its SHA-256 digest."""
+def download(
+    url: str,
+    destination: str | Path,
+    *,
+    sha256: str | None = None,
+    timeout: int = 60,
+    require_sha256: bool = True,
+) -> Path:
+    """Download an HTTPS artifact and verify its SHA-256 digest.
+
+    Production callers should keep ``require_sha256=True`` so an unpinned
+    remote artifact can never silently enter an installation workflow.
+    """
     if not url.lower().startswith("https://"):
         raise DownloadError("Only HTTPS artifact URLs are permitted")
+    if require_sha256 and not sha256:
+        raise DownloadError("A SHA-256 pin is required before downloading an installation artifact")
 
     target = Path(destination)
     target.parent.mkdir(parents=True, exist_ok=True)
