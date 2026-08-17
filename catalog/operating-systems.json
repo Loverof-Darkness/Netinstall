@@ -7,41 +7,43 @@
       "version": "24.04 LTS",
       "architecture": ["x86_64"],
       "installer": "ubuntu-autoinstall",
+      "status": "ready",
       "description": "Ubuntu 24.04 LTS AMD64 network installer. Official netboot kernel and initrd are hosted by Ubuntu.",
       "artifacts": [
         {
           "name": "kernel",
           "url": "https://releases.ubuntu.com/24.04/netboot/amd64/linux",
           "sha256": null,
-          "verification": "release-artifact-pinned-by-ci"
+          "verification": "pin-before-production-use"
         },
         {
           "name": "initrd",
           "url": "https://releases.ubuntu.com/24.04/netboot/amd64/initrd",
           "sha256": null,
-          "verification": "release-artifact-pinned-by-ci"
+          "verification": "pin-before-production-use"
         }
       ]
     },
     {
       "id": "debian-13",
       "name": "Debian",
-      "version": "13",
+      "version": "13 (Trixie)",
       "architecture": ["x86_64"],
       "installer": "debian-installer",
-      "description": "Debian 13 (Trixie) AMD64 network installer. Official current netboot kernel and initrd are hosted by Debian.",
+      "status": "ready",
+      "description": "Debian 13 AMD64 network installer. Official current netboot kernel and initrd are hosted by Debian.",
       "artifacts": [
         {
           "name": "kernel",
-          "url": "https://ftp.debian.org/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64/linux",
+          "url": "https://deb.debian.org/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64/linux",
           "sha256": null,
-          "verification": "release-artifact-pinned-by-ci"
+          "verification": "pin-before-production-use"
         },
         {
           "name": "initrd",
-          "url": "https://ftp.debian.org/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64/initrd.gz",
+          "url": "https://deb.debian.org/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64/initrd.gz",
           "sha256": null,
-          "verification": "release-artifact-pinned-by-ci"
+          "verification": "pin-before-production-use"
         }
       ]
     },
@@ -51,7 +53,8 @@
       "version": "current",
       "architecture": ["x86_64"],
       "installer": "fedora-kickstart",
-      "description": "Fedora network installation definition. Artifact coordinates will be added only after the target release is pinned and verified.",
+      "status": "planned",
+      "description": "Fedora network installation definition. Release-specific kernel/initrd coordinates must be pinned before activation.",
       "artifacts": []
     },
     {
@@ -60,7 +63,8 @@
       "version": "11",
       "architecture": ["x86_64"],
       "installer": "windows-winpe",
-      "description": "Windows 11 deployment definition; installation media is not bundled in this repository.",
+      "status": "planned",
+      "description": "Windows 11 deployment definition. A user-supplied, licensed Windows installation source and WinPE workflow are required; media is not bundled here.",
       "artifacts": []
     }
   ]
