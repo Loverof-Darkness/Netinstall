@@ -1,0 +1,17 @@
+#cloud-config
+# Example only. Review and customize before using in a real deployment.
+autoinstall:
+  version: 1
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+  identity:
+    hostname: netinstall
+    username: installer
+    password: "$6$REPLACE_WITH_A_REAL_HASH"
+  ssh:
+    install-server: false
+  storage:
+    layout:
+      name: lvm
+  shutdown: reboot
