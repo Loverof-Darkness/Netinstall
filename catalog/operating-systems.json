@@ -7,8 +7,21 @@
       "version": "24.04 LTS",
       "architecture": ["x86_64"],
       "installer": "ubuntu-autoinstall",
-      "description": "Ubuntu 24.04 LTS network installation definition.",
-      "artifacts": []
+      "description": "Ubuntu 24.04 LTS AMD64 network installer. Official netboot kernel and initrd are hosted by Ubuntu.",
+      "artifacts": [
+        {
+          "name": "kernel",
+          "url": "https://releases.ubuntu.com/24.04/netboot/amd64/linux",
+          "sha256": null,
+          "verification": "release-artifact-pinned-by-ci"
+        },
+        {
+          "name": "initrd",
+          "url": "https://releases.ubuntu.com/24.04/netboot/amd64/initrd",
+          "sha256": null,
+          "verification": "release-artifact-pinned-by-ci"
+        }
+      ]
     },
     {
       "id": "debian-13",
@@ -16,8 +29,21 @@
       "version": "13",
       "architecture": ["x86_64"],
       "installer": "debian-installer",
-      "description": "Debian 13 network installation definition.",
-      "artifacts": []
+      "description": "Debian 13 (Trixie) AMD64 network installer. Official current netboot kernel and initrd are hosted by Debian.",
+      "artifacts": [
+        {
+          "name": "kernel",
+          "url": "https://ftp.debian.org/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64/linux",
+          "sha256": null,
+          "verification": "release-artifact-pinned-by-ci"
+        },
+        {
+          "name": "initrd",
+          "url": "https://ftp.debian.org/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64/initrd.gz",
+          "sha256": null,
+          "verification": "release-artifact-pinned-by-ci"
+        }
+      ]
     },
     {
       "id": "fedora-workstation",
@@ -25,7 +51,7 @@
       "version": "current",
       "architecture": ["x86_64"],
       "installer": "fedora-kickstart",
-      "description": "Fedora Workstation network installation definition.",
+      "description": "Fedora network installation definition. Artifact coordinates will be added only after the target release is pinned and verified.",
       "artifacts": []
     },
     {
