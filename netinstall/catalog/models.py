@@ -24,6 +24,7 @@ class OperatingSystem:
     architecture: tuple[str, ...]
     installer: str
     artifacts: tuple[BootArtifact, ...]
+    status: str = "ready"
     description: str = ""
 
     def supports(self, architecture: str) -> bool:
