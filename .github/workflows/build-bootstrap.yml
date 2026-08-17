@@ -2,14 +2,15 @@ name: Build NetInstall Bootstrap
 
 on:
   push:
+    branches:
+      - main
+    tags:
+      - 'v*'
     paths:
       - 'boot/ipxe/**'
       - 'scripts/build-ipxe.sh'
       - 'scripts/make-usb-tree.sh'
       - '.github/workflows/build-bootstrap.yml'
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 permissions:
