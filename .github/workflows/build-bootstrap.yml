@@ -7,6 +7,9 @@ on:
       - 'scripts/build-ipxe.sh'
       - 'scripts/make-usb-tree.sh'
       - '.github/workflows/build-bootstrap.yml'
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -20,12 +23,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install build tools
-        run: sudo apt-get update && sudo apt-get install -y build-essential gcc make git binutils perl xz-utils
+        run: sudo apt-get update && sudo apt-get install -y build-essential gcc make git binutils perl xz-utils liblzma-dev
 
       - name: Build embedded iPXE EFI
         env:
           IPXE_REF: master
-        run: bash scripts/build-ipxe.sh
+        run: |
+          chmod +x scripts/build-ipxe.sh scripts/make-usb-tree.sh
+          bash scripts/build-ipxe.sh
 
       - name: Prepare USB tree
         run: bash scripts/make-usb-tree.sh
@@ -36,6 +41,9 @@ jobs:
           test -s dist/BOOTX64.EFI
           sha256sum -c dist/BOOTX64.EFI.sha256
 
+      - name: Package USB tree
+        run: tar -C dist -czf netinstall-usb-tree.tar.gz usb-tree
+
       - name: Upload bootstrap artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -43,4 +51,4 @@ jobs:
           path: |
             dist/BOOTX64.EFI
             dist/BOOTX64.EFI.sha256
-            dist/usb-tree/**
+            netinstall-usb-tree.tar.gz
