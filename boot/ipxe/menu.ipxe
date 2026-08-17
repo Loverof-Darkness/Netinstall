@@ -1,0 +1,12 @@
+#!ipxe
+
+# Runtime-generated menu placeholder.
+# The deployment runtime should render boot entries from the signed catalog.
+# Do not hard-code OS download URLs here.
+
+echo NetInstall dynamic boot menu
+chain --replace ${menu-url} || goto menu_error
+
+:menu_error
+echo Unable to load the remote NetInstall menu.
+shell
