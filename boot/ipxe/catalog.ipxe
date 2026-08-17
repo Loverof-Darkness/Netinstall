@@ -1,7 +1,8 @@
 #!ipxe
 
-# Minimal remote control script. OS installers will be added by the
-# deployment engine once the bootstrap transport is established.
+# NetInstall remote control script.
+set base https://raw.githubusercontent.com/Loverof-Darkness/Netinstall/main
+set catalog ${base}/catalog/operating-systems.json
 
 echo
  echo ========================================
@@ -10,12 +11,47 @@ echo ========================================
 echo
 
 echo Repository: Loverof-Darkness/Netinstall
-echo Catalog: catalog/operating-systems.json
+echo Catalog: ${catalog}
 echo
 
-echo Bootstrap transport is operational.
-echo Installer selection will be handled by the NetInstall runtime.
-
+echo Downloading catalog metadata...
+imgfetch ${catalog} || goto catalog-error
+echo Catalog downloaded.
 echo
 
+menu NetInstall
+item ubuntu         Ubuntu 24.04 LTS
+item debian         Debian 13
+item fedora         Fedora Workstation
+item windows        Windows 11
+item shell          iPXE shell
+choose os || goto shell
+
+goto ${os}
+
+:ubuntu
+echo Ubuntu selected.
+echo Installer integration will be added by the deployment engine.
+goto shell
+
+:debian
+echo Debian selected.
+echo Installer integration will be added by the deployment engine.
+goto shell
+
+:fedora
+echo Fedora selected.
+echo Installer integration will be added by the deployment engine.
+goto shell
+
+:windows
+echo Windows selected.
+echo WinPE integration will be added by the deployment engine.
+goto shell
+
+:shell
+shell
+
+:catalog-error
+echo Failed to download the catalog over HTTPS.
 shell
