@@ -22,8 +22,13 @@ except CatalogError as exc:
 for entry in entries:
     if not entry.architecture:
         raise SystemExit(f"{entry.id}: no architecture declared")
-    if entry.installer != "windows-winpe" and not entry.artifacts:
-        raise SystemExit(f"{entry.id}: no boot artifacts declared")
+    if entry.status == "ready" and len(entry.artifacts) < 2:
+        raise SystemExit(f"{entry.id}: ready entry needs kernel and initrd artifacts")
+    if entry.status != "ready" and not entry.artifacts:
+        continue
+    names = {artifact.name for artifact in entry.artifacts}
+    if entry.status == "ready" and not {"kernel", "initrd"}.issubset(names):
+        raise SystemExit(f"{entry.id}: ready entry must define kernel and initrd")
     for artifact in entry.artifacts:
         if not artifact.url.startswith("https://"):
             raise SystemExit(f"{entry.id}/{artifact.name}: artifact URL must use HTTPS")
