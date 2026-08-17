@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "operating_systems": [
+    {
+      "id": "ubuntu-24.04",
+      "name": "Ubuntu",
+      "version": "24.04 LTS",
+      "architecture": ["x86_64"],
+      "installer": "ubuntu-autoinstall",
+      "description": "Ubuntu 24.04 LTS network installation definition.",
+      "artifacts": []
+    },
+    {
+      "id": "debian-13",
+      "name": "Debian",
+      "version": "13",
+      "architecture": ["x86_64"],
+      "installer": "debian-installer",
+      "description": "Debian 13 network installation definition.",
+      "artifacts": []
+    },
+    {
+      "id": "fedora-workstation",
+      "name": "Fedora Workstation",
+      "version": "current",
+      "architecture": ["x86_64"],
+      "installer": "fedora-kickstart",
+      "description": "Fedora Workstation network installation definition.",
+      "artifacts": []
+    },
+    {
+      "id": "windows-11",
+      "name": "Windows",
+      "version": "11",
+      "architecture": ["x86_64"],
+      "installer": "windows-winpe",
+      "description": "Windows 11 deployment definition; installation media is not bundled in this repository.",
+      "artifacts": []
+    }
+  ]
+}
