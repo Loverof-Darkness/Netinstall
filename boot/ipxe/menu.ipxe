@@ -1,12 +1,34 @@
 #!ipxe
 
-# Runtime-generated menu placeholder.
-# The deployment runtime should render boot entries from the signed catalog.
-# Do not hard-code OS download URLs here.
+# Generated/maintained network installer menu.
+# Only ready catalog entries with kernel+initrd artifacts belong here.
 
-echo NetInstall dynamic boot menu
-chain --replace ${menu-url} || goto menu_error
+set ubuntu_kernel https://releases.ubuntu.com/24.04/netboot/amd64/linux
+set ubuntu_initrd https://releases.ubuntu.com/24.04/netboot/amd64/initrd
+set debian_kernel https://deb.debian.org/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64/linux
+set debian_initrd https://deb.debian.org/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64/initrd.gz
 
-:menu_error
-echo Unable to load the remote NetInstall menu.
+menu NetInstall - Select an operating system
+item ubuntu Ubuntu 24.04 LTS (network installer)
+item debian Debian 13 (Trixie) (network installer)
+item shell iPXE shell
+choose selected || goto shell
+
+goto ${selected}
+
+:ubuntu
+echo Loading Ubuntu 24.04 LTS network installer...
+echo The installer will run interactively unless a separately verified Autoinstall config is supplied.
+kernel ${ubuntu_kernel} ip=dhcp ---
+initrd ${ubuntu_initrd}
+boot
+
+:debian
+echo Loading Debian 13 network installer...
+echo The installer will run interactively unless a separately verified preseed is supplied.
+kernel ${debian_kernel} auto=true priority=high ip=dhcp ---
+initrd ${debian_initrd}
+boot
+
+:shell
 shell
