@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from .models import BootArtifact, OperatingSystem
 
@@ -42,6 +43,10 @@ def parse(data: Any) -> tuple[OperatingSystem, ...]:
             raise CatalogError(f"Invalid or duplicate OS id: {os_id!r}")
         seen_ids.add(os_id)
 
+        status = raw.get("status", "ready")
+        if status not in {"ready", "planned", "experimental"}:
+            raise CatalogError(f"Invalid status for {os_id}: {status!r}")
+
         architectures = raw["architecture"]
         if isinstance(architectures, str):
             architectures = [architectures]
@@ -54,7 +59,13 @@ def parse(data: Any) -> tuple[OperatingSystem, ...]:
         for artifact in raw["artifacts"]:
             if not isinstance(artifact, dict) or not isinstance(artifact.get("name"), str) or not isinstance(artifact.get("url"), str):
                 raise CatalogError(f"Invalid artifact in {os_id}")
-            artifacts.append(BootArtifact(artifact["name"], artifact["url"], artifact.get("sha256")))
+            url = artifact["url"]
+            if urlparse(url).scheme != "https":
+                raise CatalogError(f"Artifact URL must use HTTPS: {os_id}/{artifact['name']}")
+            sha256 = artifact.get("sha256")
+            if sha256 is not None and (not isinstance(sha256, str) or len(sha256) != 64 or any(c not in "0123456789abcdefABCDEF" for c in sha256)):
+                raise CatalogError(f"Invalid SHA-256 for {os_id}/{artifact['name']}")
+            artifacts.append(BootArtifact(artifact["name"], url, sha256))
 
         entries.append(
             OperatingSystem(
@@ -64,6 +75,7 @@ def parse(data: Any) -> tuple[OperatingSystem, ...]:
                 architecture=tuple(architectures),
                 installer=str(raw["installer"]),
                 artifacts=tuple(artifacts),
+                status=status,
                 description=str(raw.get("description", "")),
             )
         )
