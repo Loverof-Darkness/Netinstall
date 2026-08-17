@@ -1,0 +1,29 @@
+name: NetInstall tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install package and test tools
+        run: python -m pip install --upgrade pip pytest
+      - name: Install NetInstall
+        run: python -m pip install -e .
+      - name: Run tests
+        run: pytest -q
+      - name: CLI smoke test
+        run: |
+          netinstall --version
+          netinstall status
+          netinstall os
