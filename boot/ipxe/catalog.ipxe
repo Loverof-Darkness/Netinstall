@@ -1,57 +1,29 @@
 #!ipxe
 
-# NetInstall remote control script.
+# NetInstall network boot menu.
+# URLs below point only to HTTPS release artifacts from the OS vendors.
+
 set base https://raw.githubusercontent.com/Loverof-Darkness/Netinstall/main
 set catalog ${base}/catalog/operating-systems.json
+set menu-url ${base}/boot/ipxe/menu.ipxe
 
 echo
  echo ========================================
-echo        NetInstall Remote Catalog
+echo        NetInstall Network Installer
 echo ========================================
 echo
 
-echo Repository: Loverof-Darkness/Netinstall
-echo Catalog: ${catalog}
-echo
-
-echo Downloading catalog metadata...
+echo Fetching catalog metadata...
 imgfetch ${catalog} || goto catalog-error
-echo Catalog downloaded.
-echo
-
-menu NetInstall
-item ubuntu         Ubuntu 24.04 LTS
-item debian         Debian 13
-item fedora         Fedora Workstation
-item windows        Windows 11
-item shell          iPXE shell
-choose os || goto shell
-
-goto ${os}
-
-:ubuntu
-echo Ubuntu selected.
-echo Installer integration will be added by the deployment engine.
-goto shell
-
-:debian
-echo Debian selected.
-echo Installer integration will be added by the deployment engine.
-goto shell
-
-:fedora
-echo Fedora selected.
-echo Installer integration will be added by the deployment engine.
-goto shell
-
-:windows
-echo Windows selected.
-echo WinPE integration will be added by the deployment engine.
-goto shell
-
-:shell
-shell
+echo Catalog metadata available.
+echo Loading boot menu...
+chain --replace ${menu-url} || goto menu-error
 
 :catalog-error
-echo Failed to download the catalog over HTTPS.
+echo Failed to retrieve the NetInstall catalog.
+echo Verify HTTPS connectivity.
+shell
+
+:menu-error
+echo Failed to retrieve the NetInstall boot menu.
 shell
