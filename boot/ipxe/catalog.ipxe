@@ -1,0 +1,21 @@
+#!ipxe
+
+# Minimal remote control script. OS installers will be added by the
+# deployment engine once the bootstrap transport is established.
+
+echo
+ echo ========================================
+echo        NetInstall Remote Catalog
+echo ========================================
+echo
+
+echo Repository: Loverof-Darkness/Netinstall
+echo Catalog: catalog/operating-systems.json
+echo
+
+echo Bootstrap transport is operational.
+echo Installer selection will be handled by the NetInstall runtime.
+
+echo
+
+shell
