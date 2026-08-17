@@ -11,7 +11,8 @@ mkdir -p "${BUILD_DIR}"
 git clone --depth 1 --branch "${IPXE_REF}" https://github.com/ipxe/ipxe.git "${BUILD_DIR}"
 
 make -C "${BUILD_DIR}/src" bin-x86_64-efi/ipxe.efi \
-  EMBED="${IPXE_SCRIPT}"
+  EMBED="${IPXE_SCRIPT}" \
+  CONSOLE_SERIAL=1
 
 mkdir -p "${ROOT}/dist"
 cp "${BUILD_DIR}/src/bin-x86_64-efi/ipxe.efi" "${ROOT}/dist/BOOTX64.EFI"
