@@ -1,0 +1,34 @@
+name: Validate NetInstall bootstrap
+
+on:
+  push:
+    paths:
+      - 'boot/ipxe/**'
+      - 'catalog/**'
+      - 'netinstall/bootstrap/**'
+      - '.github/workflows/bootstrap.yml'
+  pull_request:
+    paths:
+      - 'boot/ipxe/**'
+      - 'catalog/**'
+      - 'netinstall/bootstrap/**'
+      - '.github/workflows/bootstrap.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate iPXE scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in boot/ipxe/*.ipxe; do
+            test -s "$file"
+            grep -q '^#!ipxe$' "$file"
+          done
+      - name: Validate catalog JSON
+        run: python -m json.tool catalog/operating-systems.json >/dev/null
