@@ -1,0 +1,49 @@
+name: Release NetInstall Bootstrap
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout NetInstall
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y build-essential gcc make git binutils perl xz-utils liblzma-dev
+
+      - name: Build bootstrap
+        env:
+          IPXE_REF: master
+        run: |
+          chmod +x scripts/build-ipxe.sh scripts/make-usb-tree.sh
+          bash scripts/build-ipxe.sh
+          bash scripts/make-usb-tree.sh
+
+      - name: Validate artifact
+        run: |
+          test -s dist/BOOTX64.EFI
+          sha256sum -c dist/BOOTX64.EFI.sha256
+          test -f dist/usb-tree/EFI/BOOT/BOOTX64.EFI
+          sha256sum dist/BOOTX64.EFI > dist/RELEASE-SHA256.txt
+
+      - name: Package release
+        run: |
+          tar -C dist -czf netinstall-bootstrap.tar.gz BOOTX64.EFI BOOTX64.EFI.sha256 usb-tree RELEASE-SHA256.txt
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            netinstall-bootstrap.tar.gz
+            dist/BOOTX64.EFI
+            dist/BOOTX64.EFI.sha256
+            dist/RELEASE-SHA256.txt
