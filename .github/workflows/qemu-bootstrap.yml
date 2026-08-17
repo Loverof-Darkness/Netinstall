@@ -29,6 +29,8 @@ jobs:
         run: |
           chmod +x scripts/build-ipxe.sh
           IPXE_REF=master bash scripts/build-ipxe.sh
+          mkdir -p dist/EFI/BOOT
+          cp dist/BOOTX64.EFI dist/EFI/BOOT/BOOTX64.EFI
 
       - name: Boot EFI artifact in QEMU
         shell: bash
