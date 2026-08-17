@@ -1,17 +1,13 @@
 #cloud-config
-# Example only. Review and customize before using in a real deployment.
+# Example only. Generate a real file with NetInstall's config renderer.
 autoinstall:
   version: 1
   locale: en_US.UTF-8
   keyboard:
     layout: us
   identity:
-    hostname: netinstall
+    hostname: netinstall-example
     username: installer
-    password: "$6$REPLACE_WITH_A_REAL_HASH"
+    password: '$REPLACE_WITH_CRYPT_HASH'
   ssh:
     install-server: false
-  storage:
-    layout:
-      name: lvm
-  shutdown: reboot
