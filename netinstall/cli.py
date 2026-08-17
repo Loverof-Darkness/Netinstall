@@ -7,6 +7,7 @@ import argparse
 from . import __version__
 from .hardware.probe import snapshot
 from .network.probe import interfaces
+from .network.wifi import WifiError, available_backends, scan
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -15,11 +16,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="netinstall",
         description="Universal network-based operating system deployment and recovery toolkit.",
     )
-    parser.add_argument(
-        "--version",
-        action="version",
-        version=f"%(prog)s {__version__}",
-    )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     subparsers = parser.add_subparsers(dest="command")
 
     status = subparsers.add_parser("status", help="Show NetInstall capability status.")
@@ -30,6 +27,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Inspect hardware, firmware, and network capabilities without changing state.",
     )
     diagnose.set_defaults(handler=_diagnose)
+
+    wifi = subparsers.add_parser("wifi", help="Inspect available Wi-Fi networks.")
+    wifi_subparsers = wifi.add_subparsers(dest="wifi_command")
+    wifi_scan = wifi_subparsers.add_parser("scan", help="Scan for nearby Wi-Fi networks.")
+    wifi_scan.add_argument("--interface", help="Wi-Fi interface to scan with.")
+    wifi_scan.set_defaults(handler=_wifi_scan)
 
     return parser
 
@@ -72,11 +75,32 @@ def _diagnose(_args: argparse.Namespace) -> int:
     return 0
 
 
+def _wifi_scan(args: argparse.Namespace) -> int:
+    """Scan for Wi-Fi networks without changing network configuration."""
+    print("NetInstall Wi-Fi scan")
+    print("=====================")
+    print("Backends:", ", ".join(available_backends()) or "none")
+    try:
+        networks = scan(args.interface)
+    except WifiError as exc:
+        print(f"Error: {exc}")
+        return 2
+
+    if not networks:
+        print("No networks found.")
+        return 0
+
+    for network in networks:
+        signal = f"{network.signal}%" if network.signal is not None else "unknown"
+        security = network.security or "open/unknown"
+        print(f"  {network.ssid:<32} signal={signal:<8} security={security}")
+    return 0
+
+
 def main() -> int:
     """Run the NetInstall CLI."""
     parser = build_parser()
     args = parser.parse_args()
-
     handler = getattr(args, "handler", None)
     if handler is None:
         parser.print_help()
