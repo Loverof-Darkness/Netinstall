@@ -5,7 +5,9 @@ from __future__ import annotations
 import argparse
 
 from . import __version__
+from .github.client import GitHubClient, GitHubError
 from .hardware.probe import snapshot
+from .network.connectivity import check_https
 from .network.probe import interfaces
 from .network.wifi import WifiError, available_backends, scan
 
@@ -33,6 +35,12 @@ def build_parser() -> argparse.ArgumentParser:
     wifi_scan = wifi_subparsers.add_parser("scan", help="Scan for nearby Wi-Fi networks.")
     wifi_scan.add_argument("--interface", help="Wi-Fi interface to scan with.")
     wifi_scan.set_defaults(handler=_wifi_scan)
+
+    network = subparsers.add_parser("network", help="Check Internet connectivity.")
+    network.set_defaults(handler=_network_check)
+
+    github = subparsers.add_parser("github", help="Verify access to the NetInstall GitHub repository.")
+    github.set_defaults(handler=_github_check)
 
     return parser
 
@@ -71,7 +79,6 @@ def _diagnose(_args: argparse.Namespace) -> int:
         marker = "Wi-Fi" if interface.wireless else "wired/other"
         mac = interface.mac or "unknown"
         print(f"  {interface.name:<12} {marker:<12} state={state:<10} mac={mac}")
-
     return 0
 
 
@@ -89,11 +96,37 @@ def _wifi_scan(args: argparse.Namespace) -> int:
     if not networks:
         print("No networks found.")
         return 0
-
     for network in networks:
         signal = f"{network.signal}%" if network.signal is not None else "unknown"
         security = network.security or "open/unknown"
         print(f"  {network.ssid:<32} signal={signal:<8} security={security}")
+    return 0
+
+
+def _network_check(_args: argparse.Namespace) -> int:
+    """Check direct HTTPS connectivity to GitHub."""
+    result = check_https()
+    if result.reachable:
+        print(f"Internet: reachable ({result.hostname}, HTTP {result.status_code})")
+        return 0
+    print(f"Internet: unavailable ({result.hostname})")
+    if result.error:
+        print(f"Reason: {result.error}")
+    return 2
+
+
+def _github_check(_args: argparse.Namespace) -> int:
+    """Check that the public NetInstall repository API is reachable."""
+    try:
+        metadata = GitHubClient().repository_metadata()
+    except GitHubError as exc:
+        print(f"GitHub: unavailable ({exc})")
+        return 2
+    if not isinstance(metadata, dict):
+        print("GitHub: invalid repository response")
+        return 2
+    print(f"GitHub: reachable ({metadata.get('full_name', 'unknown repository')})")
+    print(f"Default branch: {metadata.get('default_branch', 'unknown')}")
     return 0
 
 
