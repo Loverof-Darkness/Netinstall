@@ -20,6 +20,13 @@ jobs:
         run: python -m pip install --upgrade pip pytest
       - name: Install NetInstall
         run: python -m pip install -e .
+      - name: Validate catalog
+        run: python scripts/validate-catalog.py
+      - name: Verify generated iPXE menu is committed
+        run: |
+          cp boot/ipxe/menu.ipxe /tmp/menu.ipxe.before
+          python scripts/generate-ipxe-menu.py
+          diff -u /tmp/menu.ipxe.before boot/ipxe/menu.ipxe
       - name: Run tests
         run: pytest -q
       - name: CLI smoke test
@@ -27,3 +34,4 @@ jobs:
           netinstall --version
           netinstall status
           netinstall os
+          netinstall deploy ubuntu-24.04
